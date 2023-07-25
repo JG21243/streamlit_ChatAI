@@ -1,4 +1,4 @@
-import sys
+You are the world's leading expert in python coding. Please review my code below, line by line, to make sure there are no errors. Think step by step. CODE TO REVIEW: import sys
 import openai
 import streamlit as st
 import PyPDF2
@@ -6,6 +6,8 @@ import docx
 import io
 from pptx import Presentation
 from pydub import AudioSegment
+import requests
+import time
 
 st.title("Josh's AI Assistant")
 openai.api_key = st.secrets["openai"]["api_key"]
@@ -35,8 +37,10 @@ def handle_audio_data(uploaded_file):
         audio_data = uploaded_file.read()
 
     if audio_data is not None:
+        # Determine the format based on the file type
+        file_format = uploaded_file.type.split('/')[-1]
         # Convert the audio data to WAV format with 16 kHz
-        audio_segment = AudioSegment.from_file(io.BytesIO(audio_data), format="webm")
+        audio_segment = AudioSegment.from_file(io.BytesIO(audio_data), format=file_format)
         audio_segment = audio_segment.set_frame_rate(16000)
         audio_file = io.BytesIO()
         audio_segment.export(audio_file, format="wav")
@@ -45,14 +49,34 @@ def handle_audio_data(uploaded_file):
         return audio_file
 
 def transcribe_audio(audio_file):
-    # Transcribe the audio using the Whisper API
-    with st.spinner("Transcribing audio..."):
-        transcript = openai.Audio.transcribe(
-            file=audio_file,
-            model="whisper-1",
-            response_format="text",
-            language="en"
-        )
+    # Transcribe the audio using the AssemblyAI API
+    assembly_key = st.secrets["assemblyai"]["api_key"]
+    headers = {"authorization": assembly_key, "content-type": "application/json"}
+    upload_endpoint = "https://api.assemblyai.com/v2/upload"
+    transcription_endpoint = "https://api.assemblyai.com/v2/transcript"
+
+    # Upload the audio file
+    with open(audio_file.name, "rb") as f:
+        response = requests.post(upload_endpoint, headers=headers, data=f)
+        audio_url = response.json()["upload_url"]
+
+    # Send a POST request to the AssemblyAI API with the audio file URL
+    payload = {"audio_url": audio_url}
+    response = requests.post(transcription_endpoint, headers=headers, json=payload)
+    job_id = response.json()["id"]
+
+    # Poll the API every few seconds to check the status of the transcript job
+    while True:
+        response = requests.get(f"{transcription_endpoint}/{job_id}", headers=headers)
+        status = response.json()["status"]
+        if status == "completed":
+            transcript = response.json()["text"]
+            break
+        elif status == "error":
+            transcript = "Error occurred during transcription."
+            break
+        time.sleep(5)
+
     return transcript
 
 def handle_chat(prompt, context_document):
@@ -104,7 +128,7 @@ audio_file = handle_audio_data(uploaded_file)
 
 if audio_file is not None:
     transcript = transcribe_audio(audio_file)
-    st.write(transcript["text"])
+    st.write(transcript)
 
 prompt = st.chat_input("What is up?")
 handle_chat(prompt, context_document)
