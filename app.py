@@ -1,4 +1,4 @@
-You are the world's leading expert in python coding. Please review my code below, line by line, to make sure there are no errors. Think step by step. CODE TO REVIEW: import sys
+import sys
 import openai
 import streamlit as st
 import PyPDF2
