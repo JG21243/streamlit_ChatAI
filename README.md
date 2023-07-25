@@ -29,6 +29,7 @@ First, you need to set your OpenAI API key in the script:
 ```python
 openai.api_key = 'your-api-key'
 ```
+Please replace 'your-api-key' with your actual OpenAI API key. Make sure to keep your API key secret and do not share it with anyone.
 
 Run the Streamlit app.
 
@@ -58,4 +59,4 @@ This project uses code from:
 - [Streamlit](https://streamlit.io/)
 
 
-Please replace 'your-api-key' with your actual OpenAI API key. Make sure to keep your API key secret and do not share it with anyone.
+
