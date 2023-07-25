@@ -9,7 +9,7 @@ from pydub import AudioSegment
 
 st.title("Josh's AI Assistant")
 
-openai.api_key = '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'
+OPENAI_API_KEY = "your_api_key_here"
 
 def handle_uploaded_file(uploaded_file):
     text = ""
