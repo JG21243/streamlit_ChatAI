@@ -8,8 +8,7 @@ from pptx import Presentation
 from pydub import AudioSegment
 
 st.title("Josh's AI Assistant")
-
-OPENAI_API_KEY = "your_api_key_here"
+openai.api_key = st.secrets["openai"]["api_key"]
 
 def handle_uploaded_file(uploaded_file):
     text = ""
