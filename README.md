@@ -57,8 +57,5 @@ This project uses code from:
 - [OpenAI](https://openai.com/)
 - [Streamlit](https://streamlit.io/)
 
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
 
 Please replace 'your-api-key' with your actual OpenAI API key. Make sure to keep your API key secret and do not share it with anyone.
