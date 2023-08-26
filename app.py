@@ -130,5 +130,5 @@ if audio_file is not None:
     transcript = transcribe_audio(audio_file)
     st.write(transcript)
 
-prompt = st.chat_input("What is up?")
+prompt = st.chat_input("What is this document about?")
 handle_chat(prompt, context_document)
