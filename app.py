@@ -8,9 +8,15 @@ from pptx import Presentation
 from pydub import AudioSegment
 import requests
 import time
+import tiktoken
 
 st.title("Josh's AI Assistant")
 openai.api_key = st.secrets["openai"]["api_key"]
+
+def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
+    encoding = tiktoken.get_encoding(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
 
 def handle_uploaded_file(uploaded_file):
     text = ""
@@ -73,7 +79,7 @@ def batch_messages(messages, max_tokens=16385):
     current_batch = []
     current_token_count = 0
     for message in messages:
-        message_tokens = len(openai.LayoutLMv2.tokenize(message["content"])["tokens"])
+        message_tokens = num_tokens_from_string(message["content"])
         if current_token_count + message_tokens > max_tokens:
             batches.append(current_batch)
             current_batch = []
