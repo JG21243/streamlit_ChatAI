@@ -152,18 +152,25 @@ def handle_chat(prompt, context_document):
         st.session_state.messages = []
     total_tokens = sum(num_tokens_from_string(msg["content"]) for msg in st.session_state.messages)
     logging.debug(f"Total tokens in all messages: {total_tokens}")
+
+    # Display only user and assistant messages in chat interface
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        if message["role"] in ["user", "assistant"]:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
     if prompt:
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
-        st.session_state.messages.append({"role": "system", "content": context_document})
+
+        # Note: Not appending context_document to messages that will be displayed
+        temp_messages = st.session_state.messages + [{"role": "system", "content": context_document}]
+        
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
             full_response = ""
-            message_batches = batch_messages(st.session_state.messages)
+            message_batches = batch_messages(temp_messages)
             for batch in message_batches:
                 for response in openai.ChatCompletion.create(
                     model=st.session_state["openai_model"],
@@ -173,7 +180,9 @@ def handle_chat(prompt, context_document):
                     full_response += response.choices[0].delta.get("content", "")
                     message_placeholder.markdown(full_response + "▌", unsafe_allow_html=True)
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
+        
         st.session_state.messages.append({"role": "assistant", "content": full_response})
+
 
 # Streamlit session state initialization
 if "messages" not in st.session_state:
