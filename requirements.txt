@@ -7,3 +7,4 @@ python-pptx==0.6.21
 pycryptodome
 ffmpeg-python
 requests==2.27.1
+tiktoken
