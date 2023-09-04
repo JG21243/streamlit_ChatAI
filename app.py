@@ -1,43 +1,89 @@
+# Importing required libraries for logging and others
+import logging
+import io
 import sys
 import openai
 import streamlit as st
 import PyPDF2
 import docx
-import io
+from typing import Union
 from pptx import Presentation
 from pydub import AudioSegment
 import requests
 import time
 import tiktoken
 
+# Streamlit title
 st.title("Josh's AI Assistant")
+
+# Configure API key for OpenAI
 openai.api_key = st.secrets["openai"]["api_key"]
 
+# Configure logging
+log_stream = io.StringIO()
+logging.basicConfig(
+    stream=log_stream,
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s]: %(message)s",
+)
+
+# Function to count the number of tokens in a string
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
     encoding = tiktoken.get_encoding(encoding_name)
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
-def handle_uploaded_file(uploaded_file):
-    text = ""
-    if uploaded_file.type == "application/pdf":
-        pdf_reader = PyPDF2.PdfReader(uploaded_file)
-        for page_num in range(len(pdf_reader.pages)):
-            text += pdf_reader.pages[page_num].extract_text()
-    elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        doc = docx.Document(io.BytesIO(uploaded_file.read()))
-        text = "\n".join([para.text for para in doc.paragraphs])
-    elif uploaded_file.type in ["application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation"]:
-        prs = Presentation(io.BytesIO(uploaded_file.read()))
-        for slide in prs.slides:
-            for shape in slide.shapes:
-                if hasattr(shape, "text"):
-                    text += shape.text
-    elif uploaded_file.type == "text/plain":
-        text = uploaded_file.read().decode("utf-8")
-    return f"Document: {text}"
+# Constants for file types
+PDF = "application/pdf"
+DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+PPT = "application/vnd.ms-powerpoint"
+PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+TXT = "text/plain"
 
+# Function to handle PDF files
+def handle_pdf(file):
+    logging.debug("Handling PDF file.")
+    pdf_reader = PyPDF2.PdfReader(file)
+    return [pdf_reader.pages[page_num].extract_text() for page_num in range(len(pdf_reader.pages))]
+
+# Function to handle DOCX files
+def handle_docx(file):
+    logging.debug("Handling DOCX file.")
+    doc = docx.Document(io.BytesIO(file.read()))
+    return ["\n".join([para.text for para in doc.paragraphs])]
+
+# Function to handle PPTX files
+def handle_pptx(file):
+    logging.debug("Handling PPTX file.")
+    prs = Presentation(io.BytesIO(file.read()))
+    return [shape.text for slide in prs.slides for shape in slide.shapes if hasattr(shape, "text")]
+
+# Function to handle TXT files
+def handle_txt(file):
+    logging.debug("Handling TXT file.")
+    return [file.read().decode("utf-8")]
+
+# Function to handle the uploaded file and extract text
+def handle_uploaded_file(uploaded_file: Union[io.IOBase, object]) -> str:
+    logging.debug("Handling uploaded file.")
+    text_list = []
+    file_type = uploaded_file.type
+    if file_type == PDF:
+        text_list.extend(handle_pdf(uploaded_file))
+    elif file_type == DOCX:
+        text_list.extend(handle_docx(uploaded_file))
+    elif file_type in [PPT, PPTX]:
+        text_list.extend(handle_pptx(uploaded_file))
+    elif file_type == TXT:
+        text_list.extend(handle_txt(uploaded_file))
+    else:
+        logging.error("Unsupported file type.")
+        return "Unsupported file type"
+    return f"Document: {''.join(text_list)}"
+
+# Function to handle audio data
 def handle_audio_data(uploaded_file):
+    logging.debug("Handling audio data.")
     audio_data = None
     if uploaded_file is not None and uploaded_file.type in ["audio/mp3", "audio/wav", "audio/m4a"]:
         audio_data = uploaded_file.read()
@@ -51,7 +97,9 @@ def handle_audio_data(uploaded_file):
         audio_file.name = "audio.wav"
         return audio_file
 
+# Function to transcribe audio
 def transcribe_audio(audio_file):
+    logging.debug("Transcribing audio.")
     assembly_key = st.secrets["assemblyai"]["api_key"]
     headers = {"authorization": assembly_key, "content-type": "application/json"}
     upload_endpoint = "https://api.assemblyai.com/v2/upload"
@@ -74,7 +122,10 @@ def transcribe_audio(audio_file):
         time.sleep(5)
     return transcript
 
+# Function to batch messages
+# Function to batch messages for OpenAI API
 def batch_messages(messages, max_tokens=16385):
+    logging.debug("Batching messages.")
     batches = []
     current_batch = []
     current_token_count = 0
@@ -90,7 +141,9 @@ def batch_messages(messages, max_tokens=16385):
         batches.append(current_batch)
     return batches
 
+# Function to handle chat interaction
 def handle_chat(prompt, context_document):
+    logging.debug("Handling chat interaction.")
     if "openai_model" not in st.session_state:
         st.session_state["openai_model"] = "gpt-3.5-turbo-16k"
     if "messages" not in st.session_state:
@@ -118,9 +171,14 @@ def handle_chat(prompt, context_document):
             message_placeholder.markdown(full_response, unsafe_allow_html=True)
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
+# Streamlit session state initialization
 if "messages" not in st.session_state:
     st.session_state.messages = []
+
+# File upload interface
 uploaded_file = st.file_uploader("Upload your document or audio file here", type=["pdf", "docx", "ppt", "pptx", "txt", "mp3", "wav", "m4a"])
+
+# Handle uploaded file and audio data
 context_document = ""
 if uploaded_file is not None:
     context_document = handle_uploaded_file(uploaded_file)
@@ -128,6 +186,12 @@ audio_file = handle_audio_data(uploaded_file)
 if audio_file is not None:
     transcript = transcribe_audio(audio_file)
     st.write(transcript)
+
+# Chat interface
 prompt = st.chat_input("What is this document about?")
 handle_chat(prompt, context_document)
+
+# Show logging output
+st.write("Logging Output")
+st.text_area("", log_stream.getvalue())
 
