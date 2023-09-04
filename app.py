@@ -122,32 +122,36 @@ def transcribe_audio(audio_file):
         time.sleep(5)
     return transcript
 
-# Function to batch messages
 # Function to batch messages for OpenAI API
 def batch_messages(messages, max_tokens=16385):
-    logging.debug("Batching messages.")
+    logging.debug("Starting to batch messages.")
     batches = []
     current_batch = []
     current_token_count = 0
     for message in messages:
         message_tokens = num_tokens_from_string(message["content"])
+        logging.debug(f"Message tokens: {message_tokens}, Current batch tokens: {current_token_count}")
         if current_token_count + message_tokens > max_tokens:
+            logging.debug(f"Creating new batch due to token limit. Current batch tokens: {current_token_count}")
             batches.append(current_batch)
             current_batch = []
             current_token_count = 0
         current_batch.append(message)
         current_token_count += message_tokens
     if current_batch:
+        logging.debug(f"Finalizing last batch with tokens: {current_token_count}")
         batches.append(current_batch)
     return batches
 
 # Function to handle chat interaction
 def handle_chat(prompt, context_document):
-    logging.debug("Handling chat interaction.")
+    logging.debug("Starting chat interaction.")
     if "openai_model" not in st.session_state:
         st.session_state["openai_model"] = "gpt-3.5-turbo-16k"
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    total_tokens = sum(num_tokens_from_string(msg["content"]) for msg in st.session_state.messages)
+    logging.debug(f"Total tokens in all messages: {total_tokens}")
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
