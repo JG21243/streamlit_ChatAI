@@ -214,6 +214,7 @@ if uploaded_file is not None:
 final_context = context_document + "\n" + audio_transcript
 
 logging.debug(f"Final context: {final_context}")
+st.write(f"Debug: Final context is {final_context}")
 
 # Chat interface
 prompt = st.chat_input("What is this document about?")
