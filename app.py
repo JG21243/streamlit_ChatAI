@@ -19,7 +19,12 @@ st.title("Josh's AI Assistant")
 # Configure API key for OpenAI
 openai.api_key = st.secrets["openai"]["api_key"]
 
-logging.basicConfig(level=logging.DEBUG)
+# Configure logging to print to console
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s]: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
 
 
 # Function to count the number of tokens in a string
