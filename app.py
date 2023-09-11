@@ -87,6 +87,7 @@ def handle_audio_data(uploaded_file):
     logging.debug("Handling audio data.")
     audio_data = None
     if uploaded_file is not None and uploaded_file.type in ["audio/mp3", "audio/wav", "audio/m4a"]:
+        logging.debug(f"Audio data read successfully. Size: {len(audio_data)} bytes")
         audio_data = uploaded_file.read()
     if audio_data is not None:
         file_format = uploaded_file.type.split('/')[-1]
@@ -107,6 +108,10 @@ def transcribe_audio(audio_file):
 
     audio_file.seek(0)  # Reset the file pointer to the beginning
     response = requests.post(upload_endpoint, headers=headers, data=audio_file.read())
+    logging.debug(f"File Upload API Response: {response.json()}")
+    response = requests.post(transcription_endpoint, headers=headers, json=payload)
+    logging.debug(f"Transcription API Response: {response.json()}")
+
     audio_url = response.json()["upload_url"]
 
     payload = {"audio_url": audio_url}
