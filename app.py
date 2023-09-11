@@ -19,13 +19,8 @@ st.title("Josh's AI Assistant")
 # Configure API key for OpenAI
 openai.api_key = st.secrets["openai"]["api_key"]
 
-# Configure logging
-log_stream = io.StringIO()
-logging.basicConfig(
-    stream=log_stream,
-    level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s]: %(message)s",
-)
+logging.basicConfig(level=logging.DEBUG)
+
 
 # Function to count the number of tokens in a string
 def num_tokens_from_string(string: str, encoding_name: str = "cl100k_base") -> int:
