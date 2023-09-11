@@ -97,19 +97,21 @@ def handle_audio_data(uploaded_file):
         audio_file.name = "audio.wav"
         return audio_file
 
-# Function to transcribe audio
 def transcribe_audio(audio_file):
     logging.debug("Transcribing audio.")
     assembly_key = st.secrets["assemblyai"]["api_key"]
     headers = {"authorization": assembly_key, "content-type": "application/json"}
     upload_endpoint = "https://api.assemblyai.com/v2/upload"
     transcription_endpoint = "https://api.assemblyai.com/v2/transcript"
-    with open(audio_file.name, "rb") as f:
-        response = requests.post(upload_endpoint, headers=headers, data=f)
-        audio_url = response.json()["upload_url"]
+
+    audio_file.seek(0)  # Reset the file pointer to the beginning
+    response = requests.post(upload_endpoint, headers=headers, data=audio_file.read())
+    audio_url = response.json()["upload_url"]
+
     payload = {"audio_url": audio_url}
     response = requests.post(transcription_endpoint, headers=headers, json=payload)
     job_id = response.json()["id"]
+
     while True:
         response = requests.get(f"{transcription_endpoint}/{job_id}", headers=headers)
         status = response.json()["status"]
@@ -120,6 +122,7 @@ def transcribe_audio(audio_file):
             transcript = "Error occurred during transcription."
             break
         time.sleep(5)
+
     return transcript
 
 # Function to batch messages for OpenAI API
