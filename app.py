@@ -225,3 +225,6 @@ handle_chat(prompt, final_context)
 st.write("Logging Output")
 #st.text_area("", log_stream.getvalue())
 
+logging.debug(f"Uploaded file type: {uploaded_file.type}, size: {uploaded_file.size}")
+logging.debug(f"Transcription Output: {audio_transcript}")
+
