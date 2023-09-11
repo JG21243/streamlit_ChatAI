@@ -193,16 +193,24 @@ uploaded_file = st.file_uploader("Upload your document or audio file here", type
 
 # Handle uploaded file and audio data
 context_document = ""
+audio_transcript = ""
 if uploaded_file is not None:
-    context_document = handle_uploaded_file(uploaded_file)
-audio_file = handle_audio_data(uploaded_file)
-if audio_file is not None:
-    transcript = transcribe_audio(audio_file)
-    st.write(transcript)
+    # Handling document files
+    if uploaded_file.type in ["pdf", "docx", "ppt", "pptx", "txt"]:
+        context_document = handle_uploaded_file(uploaded_file)
+    # Handling audio files
+    elif uploaded_file.type in ["audio/mp3", "audio/wav", "audio/m4a"]:
+        audio_file = handle_audio_data(uploaded_file)
+        if audio_file is not None:
+            audio_transcript = transcribe_audio(audio_file)
+            st.write(f"Audio Transcript: {audio_transcript}")
+
+# Merge document context and audio transcript
+final_context = context_document + "\n" + audio_transcript
 
 # Chat interface
 prompt = st.chat_input("What is this document about?")
-handle_chat(prompt, context_document)
+handle_chat(prompt, final_context)
 
 # Show logging output
 st.write("Logging Output")
