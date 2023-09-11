@@ -145,7 +145,7 @@ def batch_messages(messages, max_tokens=16385):
         logging.debug(f"Finalizing last batch with tokens: {current_token_count}")
         batches.append(current_batch)
     return batches
-
+    
 # Function to handle chat interaction
 def handle_chat(prompt, context_document):
     logging.debug("Starting chat interaction.")
@@ -169,6 +169,7 @@ def handle_chat(prompt, context_document):
 
         # In handle_chat function
         temp_messages = st.session_state.messages + [{"role": "system", "content": final_context}]
+        logging.debug(f"Temp messages: {temp_messages}")
 
         
         with st.chat_message("assistant"):
@@ -211,6 +212,8 @@ if uploaded_file is not None:
 
 # Merge document context and audio transcript
 final_context = context_document + "\n" + audio_transcript
+
+logging.debug(f"Final context: {final_context}")
 
 # Chat interface
 prompt = st.chat_input("What is this document about?")
