@@ -16,6 +16,7 @@ import tiktoken
 # Streamlit title
 st.title("Josh's AI Assistant")
 
+print("This is a test")
 # Configure API key for OpenAI
 openai.api_key = st.secrets["openai"]["api_key"]
 
