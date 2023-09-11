@@ -217,5 +217,5 @@ handle_chat(prompt, final_context)
 
 # Show logging output
 st.write("Logging Output")
-st.text_area("", log_stream.getvalue())
+#st.text_area("", log_stream.getvalue())
 
