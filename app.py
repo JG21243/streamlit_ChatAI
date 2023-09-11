@@ -167,8 +167,9 @@ def handle_chat(prompt, context_document):
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Note: Not appending context_document to messages that will be displayed
-        temp_messages = st.session_state.messages + [{"role": "system", "content": context_document}]
+        # In handle_chat function
+        temp_messages = st.session_state.messages + [{"role": "system", "content": final_context}]
+
         
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
